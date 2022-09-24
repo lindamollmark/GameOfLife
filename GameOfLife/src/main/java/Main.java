@@ -1,86 +1,146 @@
-import java.util.HashMap;
-import java.util.Map;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.SessionScoped;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Main {
-    public static void main(String[] args) {
-        final Map<Cell, Boolean> emptyCells = createCellSystem();
+@ManagedBean(name = "helloWorld")
+@SessionScoped
+public class Main implements Serializable {
 
-        Map<Cell, Boolean> cellSystem = mark5CellsAsStartCells(emptyCells);
+    private static final long serialVersionUID = -6913972022251814607L;
+    private static Set<Cell> cells;
+    private static Set<Cell> cellValues;
+    private static String s1;
 
-        do {
-            cellSystem = updateCells(cellSystem);
-        }
-        while (true);
+    static {
+        Main.cells = createCellSystem();
+        Main.s1 = "Starta spelet";
 
     }
 
-    public static Map<Cell, Boolean> updateCells(Map<Cell, Boolean> startCells) {
-        final Map<Cell, Boolean> killedByUnderPopulation = startCells.entrySet().stream()
-                .filter(Map.Entry::getValue)
-                .filter(c -> checkIfCellIsKilledByUnderpopulation(startCells, c.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey, c -> false));
+    public static void play() {
+        System.out.println("Knapp använd");
+        Main.cellValues = mark5CellsAsStartCells(Main.cells);
 
-        final Map<Cell, Boolean> killedByOverPopulation = startCells.entrySet().stream()
-                .filter(Map.Entry::getValue)
-                .filter(c -> checkIfCellIsKilledByOverpopulation(startCells, c.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey, c -> false));
 
-        final Map<Cell, Boolean> resurrectCells = startCells.entrySet().stream()
-                .filter(cellBooleanEntry -> !cellBooleanEntry.getValue())
-                .filter(c -> checkIfCellIsResurrect(startCells, c.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey, c -> true));
+        cells = updateCells(cellValues);
 
-        final Map<Cell, Boolean> stayingAlive = startCells.entrySet().stream()
-                .filter(Map.Entry::getValue)
-                .filter(c -> checkIfCellStaysAlive(startCells, c.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey, c -> true));
+    }
 
-        startCells.putAll(Stream.of(killedByUnderPopulation, killedByOverPopulation, resurrectCells, stayingAlive)
-                .flatMap(c -> c.entrySet().stream())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+    public static Set<Cell> getCellValues() {
+        return cellValues;
+    }
+
+    public static Set<Cell> updateCells(Set<Cell> startCells) {
+        final Set<Cell> killedByUnderPopulation = startCells.stream()
+                .filter(Cell::isAlive)
+                .filter(c -> checkIfCellIsKilledByUnderpopulation(startCells, c))
+                .map(c -> new Cell(c.xCordinate(), c.yCordinate(), false))
+                .collect(Collectors.toSet());
+
+        final Set<Cell> killedByOverPopulation = startCells.stream()
+                .filter(Cell::isAlive)
+                .filter(c -> checkIfCellIsKilledByOverpopulation(startCells, c))
+                .map(c -> new Cell(c.xCordinate(), c.yCordinate(), false))
+                .collect(Collectors.toSet());
+
+        final Set<Cell> resurrectCells = startCells.stream()
+                .filter(cellBooleanEntry -> !cellBooleanEntry.isAlive())
+                .filter(c -> checkIfCellIsResurrect(startCells, c))
+                .map(c -> new Cell(c.xCordinate(), c.yCordinate(), true))
+                .collect(Collectors.toSet());
+
+        final Set<Cell> stayingAlive = startCells.stream()
+                .filter(Cell::isAlive)
+                .filter(c -> checkIfCellStaysAlive(startCells, c))
+                .map(c -> new Cell(c.xCordinate(), c.yCordinate(), true))
+                .collect(Collectors.toSet());
+
+        startCells.addAll(Stream.of(killedByUnderPopulation, killedByOverPopulation, resurrectCells, stayingAlive)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet()));
         return startCells;
     }
 
-    public static boolean checkIfCellIsKilledByUnderpopulation(Map<Cell, Boolean> cellSystem, Cell livingCell) {
-        final long livingNeighbours = cellSystem.entrySet().stream()
-                .filter(c -> !c.getKey().equals(livingCell))
-                .filter(Map.Entry::getValue)
-                .filter(c -> isXNeighbourCell(c.getKey(), livingCell.xCordinate()))
-                .filter(c -> isYNeighbourCell(c.getKey(), livingCell.yCordinate()))
+    public static boolean checkIfCellIsKilledByUnderpopulation(Set<Cell> cellSystem, Cell livingCell) {
+        final long livingNeighbours = cellSystem.stream()
+                .filter(c -> !c.equals(livingCell))
+                .filter(Cell::isAlive)
+                .filter(c -> isXNeighbourCell(c, livingCell.xCordinate()))
+                .filter(c -> isYNeighbourCell(c, livingCell.yCordinate()))
                 .count();
         return livingNeighbours < 2;
     }
 
-    public static boolean checkIfCellIsKilledByOverpopulation(Map<Cell, Boolean> cellSystem, Cell livingCell) {
-        final long livingNeighbours = cellSystem.entrySet().stream()
-                .filter(c -> !c.getKey().equals(livingCell))
-                .filter(Map.Entry::getValue)
-                .filter(c -> isXNeighbourCell(c.getKey(), livingCell.xCordinate()))
-                .filter(c -> isYNeighbourCell(c.getKey(), livingCell.yCordinate()))
+    public static boolean checkIfCellIsKilledByOverpopulation(Set<Cell> cellSystem, Cell livingCell) {
+        final long livingNeighbours = cellSystem.stream()
+                .filter(c -> !c.equals(livingCell))
+                .filter(Cell::isAlive)
+                .filter(c -> isXNeighbourCell(c, livingCell.xCordinate()))
+                .filter(c -> isYNeighbourCell(c, livingCell.yCordinate()))
                 .count();
         return livingNeighbours > 3;
     }
 
-    public static boolean checkIfCellStaysAlive(Map<Cell, Boolean> cellSystem, Cell livingCell) {
-        final long livingNeighbours = cellSystem.entrySet().stream()
-                .filter(c -> !c.getKey().equals(livingCell))
-                .filter(Map.Entry::getValue)
-                .filter(c -> isXNeighbourCell(c.getKey(), livingCell.xCordinate()))
-                .filter(c -> isYNeighbourCell(c.getKey(), livingCell.yCordinate()))
+    //    public static void main(String[] args) {
+//        final Map<Cell, Boolean> emptyCells = createCellSystem();
+//
+//        Map<Cell, Boolean> cellSystem = mark5CellsAsStartCells(emptyCells);
+//
+//        do {
+//            cellSystem = updateCells(cellSystem);
+//        }
+//        while (true);
+//
+//    }
+
+    public static boolean checkIfCellStaysAlive(Set<Cell> cellSystem, Cell livingCell) {
+        final long livingNeighbours = cellSystem.stream()
+                .filter(c -> !c.equals(livingCell))
+                .filter(Cell::isAlive)
+                .filter(c -> isXNeighbourCell(c, livingCell.xCordinate()))
+                .filter(c -> isYNeighbourCell(c, livingCell.yCordinate()))
                 .count();
         return livingNeighbours == 3 || livingNeighbours == 2;
     }
 
-    public static boolean checkIfCellIsResurrect(Map<Cell, Boolean> cellSystem, Cell cellToCompare) {
-        final long livingNeighbours = cellSystem.entrySet().stream()
-                .filter(c -> !c.getKey().equals(cellToCompare))
-                .filter(Map.Entry::getValue)
-                .filter(c -> isXNeighbourCell(c.getKey(), cellToCompare.xCordinate()))
-                .filter(c -> isYNeighbourCell(c.getKey(), cellToCompare.yCordinate()))
+    public static boolean checkIfCellIsResurrect(Set<Cell> cellSystem, Cell cellToCompare) {
+        final long livingNeighbours = cellSystem.stream()
+                .filter(c -> !c.equals(cellToCompare))
+                .filter(Cell::isAlive)
+                .filter(c -> isXNeighbourCell(c, cellToCompare.xCordinate()))
+                .filter(c -> isYNeighbourCell(c, cellToCompare.yCordinate()))
                 .count();
         return livingNeighbours == 3;
+    }
+
+    private static Set<Cell> mark5CellsAsStartCells(final Set<Cell> startSystem) {
+        Set<Cell> cells = new HashSet<>();
+        cells.addAll(startSystem);
+        cells.add(new Cell(0, 3, true));
+        cells.add(new Cell(0, 2, true));
+        cells.add(new Cell(1, 2, true));
+        cells.add(new Cell(1, 1, true));
+        cells.add(new Cell(2, 1, true));
+        return cells;
+    }
+
+    private static Set<Cell> createCellSystem() {
+        Set<Cell> cells = new HashSet<>();
+        for (int x = 0; x < 5; x++) {
+            for (int y = 0; y < 5; y++) {
+                cells.add(new Cell(x, y, false));
+            }
+        }
+        return cells;
+    }
+
+    public String getS1() {
+        return s1;
     }
 
 
@@ -96,26 +156,12 @@ public class Main {
                 || neighbour.yCordinate().equals(y);
     }
 
-
-    private static Map<Cell, Boolean> mark5CellsAsStartCells(final Map<Cell, Boolean> startSystem) {
-        Map<Cell, Boolean> cells = new HashMap<>();
-        cells.putAll(startSystem);
-        cells.replace(new Cell(0, 3), true);
-        cells.replace(new Cell(0, 2), true);
-        cells.replace(new Cell(1, 2), true);
-        cells.replace(new Cell(1, 1), true);
-        cells.replace(new Cell(2, 1), true);
-        return cells;
+    public String cell(final int x, final int y) {
+        return cells.stream().filter(c -> c.xCordinate() == x && c.yCordinate() == y)
+                .findAny().map(c -> c.isAlive() ? "Lever" : "Död").orElse("SAKNAS");
     }
 
-
-    private static Map<Cell, Boolean> createCellSystem() {
-        Map<Cell, Boolean> cells = new HashMap<>();
-        for (int x = 0; x < 5; x++) {
-            for (int y = 0; y < 5; y++) {
-                cells.put(new Cell(x, y), false);
-            }
-        }
+    public Set<Cell> getCells() {
         return cells;
     }
 

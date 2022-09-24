@@ -3,10 +3,12 @@ import java.util.Objects;
 public class Cell {
     private final Integer xCordinate;
     private final Integer yCordinate;
+    private boolean isAlive;
 
-    public Cell(Integer xCordinate, Integer yCordinate) {
+    public Cell(Integer xCordinate, Integer yCordinate, boolean isAlive) {
         this.xCordinate = xCordinate;
         this.yCordinate = yCordinate;
+        this.isAlive = isAlive;
     }
 
     public Integer xCordinate() {
@@ -15,6 +17,14 @@ public class Cell {
 
     public Integer yCordinate() {
         return yCordinate;
+    }
+
+    public boolean isAlive() {
+        return isAlive;
+    }
+
+    public void setAlive(final boolean alive) {
+        isAlive = alive;
     }
 
     @Override

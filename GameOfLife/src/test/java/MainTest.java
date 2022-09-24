@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -12,80 +12,115 @@ class MainTest {
 
     @Test
     void shouldUpdateBoard() {
-        Map<Cell, Boolean> cells = createCellSystem(false);
-        cells.replace(new Cell(0, 3), true);
-        cells.replace(new Cell(0, 2), true);
-        cells.replace(new Cell(1, 2), true);
-        cells.replace(new Cell(1, 1), true);
-        cells.replace(new Cell(2, 1), true);
+        Set<Cell> cells = createCellSystem(false);
+        cells.remove(new Cell(0, 3, true));
+        cells.remove(new Cell(0, 2, true));
+        cells.remove(new Cell(1, 2, true));
+        cells.remove(new Cell(1, 1, true));
+        cells.remove(new Cell(2, 1, true));
+        cells.add(new Cell(0, 3, true));
+        cells.add(new Cell(0, 2, true));
+        cells.add(new Cell(1, 2, true));
+        cells.add(new Cell(1, 1, true));
+        cells.add(new Cell(2, 1, true));
 
-        final Map<Cell, Boolean> expected = createCellSystem(false);
-        expected.replace(new Cell(0, 1), true);
-        expected.replace(new Cell(0, 2), true);
-        expected.replace(new Cell(0, 3), true);
-        expected.replace(new Cell(1, 1), true);
-        expected.replace(new Cell(1, 3), true);
-        expected.replace(new Cell(2, 1), true);
-        expected.replace(new Cell(2, 2), true);
-        final Map<Cell, Boolean> updated = Main.updateCells(cells);
+        final Set<Cell> expected = createCellSystem(false);
+        expected.remove(new Cell(0, 1, true));
+        expected.remove(new Cell(0, 2, true));
+        expected.remove(new Cell(0, 3, true));
+        expected.remove(new Cell(1, 1, true));
+        expected.remove(new Cell(1, 3, true));
+        expected.remove(new Cell(2, 1, true));
+        expected.remove(new Cell(2, 2, true));
+        expected.add(new Cell(0, 1, true));
+        expected.add(new Cell(0, 2, true));
+        expected.add(new Cell(0, 3, true));
+        expected.add(new Cell(1, 1, true));
+        expected.add(new Cell(1, 3, true));
+        expected.add(new Cell(2, 1, true));
+        expected.add(new Cell(2, 2, true));
+        final Set<Cell> updated = Main.updateCells(cells);
         assertThat(updated, equalTo(expected));
     }
 
     @Test
     void shouldUpdateBoardTwoRounds() {
-        Map<Cell, Boolean> cells = createCellSystem(false);
-        cells.replace(new Cell(0, 3), true);
-        cells.replace(new Cell(0, 2), true);
-        cells.replace(new Cell(1, 2), true);
-        cells.replace(new Cell(1, 1), true);
-        cells.replace(new Cell(2, 1), true);
+        Set<Cell> cells = createCellSystem(false);
+        cells.remove(new Cell(0, 3, true));
+        cells.remove(new Cell(0, 2, true));
+        cells.remove(new Cell(1, 2, true));
+        cells.remove(new Cell(1, 1, true));
+        cells.remove(new Cell(2, 1, true));
+        cells.add(new Cell(0, 3, true));
+        cells.add(new Cell(0, 2, true));
+        cells.add(new Cell(1, 2, true));
+        cells.add(new Cell(1, 1, true));
+        cells.add(new Cell(2, 1, true));
 
-        final Map<Cell, Boolean> updated1 = Main.updateCells(cells);
-        final Map<Cell, Boolean> updated2 = Main.updateCells(updated1);
-        final Map<Cell, Boolean> expected = createCellSystem(false);
-        expected.replace(new Cell(0, 1), true);
-        expected.replace(new Cell(0, 3), true);
-        expected.replace(new Cell(1, 0), true);
-        expected.replace(new Cell(1, 3), true);
-        expected.replace(new Cell(2, 1), true);
-        expected.replace(new Cell(2, 2), true);
+        final Set<Cell> updated1 = Main.updateCells(cells);
+        final Set<Cell> updated2 = Main.updateCells(updated1);
+        final Set<Cell> expected = createCellSystem(false);
+        expected.remove(new Cell(0, 1, true));
+        expected.remove(new Cell(0, 3, true));
+        expected.remove(new Cell(1, 0, true));
+        expected.remove(new Cell(1, 3, true));
+        expected.remove(new Cell(2, 1, true));
+        expected.remove(new Cell(2, 2, true));
+        expected.add(new Cell(0, 1, true));
+        expected.add(new Cell(0, 3, true));
+        expected.add(new Cell(1, 0, true));
+        expected.add(new Cell(1, 3, true));
+        expected.add(new Cell(2, 1, true));
+        expected.add(new Cell(2, 2, true));
         assertThat(updated2, equalTo(expected));
     }
 
     @Test
     void shouldKillCellWithLessThanTwoLivingNeighbours() {
-        final Map<Cell, Boolean> cellSystem = createCellSystem(false);
-        final Cell cellToCompare = new Cell(1, 2);
-        final Cell livingCell1 = new Cell(3, 2);
-        final Cell livingCell2 = new Cell(4, 4);
-        cellSystem.put(cellToCompare, true);
-        cellSystem.put(livingCell1, true);
-        cellSystem.put(livingCell2, true);
+        final Set<Cell> cellSystem = createCellSystem(false);
+        final Cell cellToCompare = new Cell(1, 2, true);
+        final Cell livingCell1 = new Cell(3, 2, true);
+        final Cell livingCell2 = new Cell(4, 4, true);
+        cellSystem.remove(cellToCompare);
+        cellSystem.remove(livingCell1);
+        cellSystem.remove(livingCell2);
+        cellSystem.add(cellToCompare);
+        cellSystem.add(livingCell1);
+        cellSystem.add(livingCell2);
         assertTrue(Main.checkIfCellIsKilledByUnderpopulation(cellSystem, cellToCompare));
     }
 
     @Test
     void shouldNotKillCellWithTwoLivingNeighbours() {
-        final Map<Cell, Boolean> cellSystem = createCellSystem(false);
-        final Cell cellToCompare = new Cell(1, 2);
-        final Cell livingCell1 = new Cell(2, 2);
-        final Cell livingCell2 = new Cell(0, 1);
-        cellSystem.put(cellToCompare, true);
-        cellSystem.put(livingCell1, true);
-        cellSystem.put(livingCell2, true);
+        final Set<Cell> cellSystem = createCellSystem(false);
+        final Cell cellToCompare = new Cell(1, 2, true);
+        final Cell livingCell1 = new Cell(2, 2, true);
+        final Cell livingCell2 = new Cell(0, 1, true);
+        cellSystem.remove(cellToCompare);
+        cellSystem.remove(livingCell1);
+        cellSystem.remove(livingCell2);
+        cellSystem.add(cellToCompare);
+        cellSystem.add(livingCell1);
+        cellSystem.add(livingCell2);
 
         assertFalse(Main.checkIfCellIsKilledByUnderpopulation(cellSystem, cellToCompare));
     }
 
     @Test
     void shouldKillCellWithMoreThanThreeLivingNeighbours() {
-        final Map<Cell, Boolean> cellSystem = createCellSystem(false);
-        final Cell cellToCompare = new Cell(1, 2);
-        cellSystem.replace(new Cell(1, 2), true);
-        cellSystem.replace(new Cell(1, 1), true);
-        cellSystem.replace(new Cell(2, 1), true);
-        cellSystem.replace(new Cell(2, 3), true);
-        cellSystem.replace(new Cell(0, 3), true);
+        final Set<Cell> cellSystem = createCellSystem(false);
+        final Cell cellToCompare = new Cell(1, 2, true);
+        cellSystem.remove(new Cell(1, 2, true));
+        cellSystem.remove(new Cell(1, 1, true));
+        cellSystem.remove(new Cell(2, 1, true));
+        cellSystem.remove(new Cell(2, 3, true));
+        cellSystem.remove(new Cell(0, 3, true));
+
+        cellSystem.add(new Cell(1, 2, true));
+        cellSystem.add(new Cell(1, 1, true));
+        cellSystem.add(new Cell(2, 1, true));
+        cellSystem.add(new Cell(2, 3, true));
+        cellSystem.add(new Cell(0, 3, true));
 
 
         assertTrue(Main.checkIfCellIsKilledByOverpopulation(cellSystem, cellToCompare));
@@ -93,23 +128,27 @@ class MainTest {
 
     @Test
     void shouldResurrectCellWithExactThreeLivingNeighbours() {
-        final Map<Cell, Boolean> cellSystem = createCellSystem(false);
-        final Cell cellToCompare = new Cell(1, 2);
-        final Cell livingCell1 = new Cell(2, 2);
-        final Cell livingCell2 = new Cell(0, 1);
-        final Cell livingCell3 = new Cell(1, 3);
-        cellSystem.put(livingCell1, true);
-        cellSystem.put(livingCell2, true);
-        cellSystem.put(livingCell3, true);
+        final Set<Cell> cellSystem = createCellSystem(false);
+        final Cell cellToCompare = new Cell(1, 2, false);
+        final Cell livingCell1 = new Cell(2, 2, true);
+        final Cell livingCell2 = new Cell(0, 1, true);
+        final Cell livingCell3 = new Cell(1, 3, true);
+        cellSystem.remove(livingCell1);
+        cellSystem.remove(livingCell2);
+        cellSystem.remove(livingCell3);
+
+        cellSystem.add(livingCell1);
+        cellSystem.add(livingCell2);
+        cellSystem.add(livingCell3);
 
         assertTrue(Main.checkIfCellIsResurrect(cellSystem, cellToCompare));
     }
 
-    private Map<Cell, Boolean> createCellSystem(boolean livingCell) {
-        Map<Cell, Boolean> cells = new HashMap<>();
+    private Set<Cell> createCellSystem(boolean livingCell) {
+        Set<Cell> cells = new HashSet<>();
         for (int x = 0; x < 5; x++) {
             for (int y = 0; y < 5; y++) {
-                cells.put(new Cell(x, y), livingCell);
+                cells.add(new Cell(x, y, livingCell));
             }
         }
         return cells;
