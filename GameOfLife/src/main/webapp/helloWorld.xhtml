@@ -11,14 +11,14 @@
 </h:head>
 <h:body>
 
-    #{helloWorld.s1}
-    <br></br>
+    #{gameOfLife.s1}
+    <br/>
 
     <table>
         <c:forEach begin="0" end="4" step="1" var="y">
             <tr>
                 <c:forEach begin="0" end="4" step="1" var="x">
-                    <td> #{helloWorld.cell(x, y)}</td>
+                    <td> #{gameOfLife.cell(x, y)}</td>
                 </c:forEach>
 
             </tr>

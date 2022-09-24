@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@ManagedBean(name = "helloWorld")
+@ManagedBean(name = "gameOfLife")
 @SessionScoped
 public class Main implements Serializable {
 
