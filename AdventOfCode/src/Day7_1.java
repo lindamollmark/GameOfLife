@@ -36,7 +36,7 @@ public class Day7_1 {
         final Integer totalLowSizeDir = directorys.values().stream()
                 .filter(e -> e.totalFileSize() <= 100000)
                 .map(d -> d.totalFileSize())
-                .reduce(0, (a, b) -> Integer.sum(a, b));
+                .reduce(0, Integer::sum);
 
         System.out.println(totalLowSizeDir);
     }
